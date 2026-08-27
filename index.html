@@ -3,186 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ҮҮИ орлуулга — мэргэжилтний хэрэгсэл</title>
+  <title>ҮҮИ орлуулга — Excel маягийн бүртгэл</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="app-header">
+  <header>
     <div class="brand">
-      <div class="brand-icon">Ү</div>
+      <div class="logo">ҮСХ</div>
       <div>
-        <h1>Үйлдвэрлэгчийн үнийн <span>орлуулга</span></h1>
-        <p>Аргачлал 2026 · бүх салбар · мэргэжилтний ажлын хэрэгсэл</p>
+        <h1>Үйлдвэрлэгчийн үнийн орлуулгын бүртгэл</h1>
+        <p>Салбар сонгох → бүтээгдэхүүн, өмнөх үнэ гараар → арга, өөрчлөлтийн хувь → тайлант үнэ · Excel тайлан · сарын түүх</p>
       </div>
     </div>
-    <div class="controls">
-      <div>
-        <label>Тайлант сар</label>
-        <select id="period"></select>
-      </div>
-      <div>
-        <label>Салбар</label>
-        <select id="sectorFilter"></select>
-      </div>
-      <div>
-        <label>Мэргэжилтэн</label>
-        <input id="specialist" placeholder="Нэр" value="Үнийн статистикч" />
-      </div>
-      <button class="btn btn-ghost" type="button" id="btnReset">Жишээ сэргээх</button>
+    <div class="toolbar">
+      <label>Салбар
+        <select id="sector"></select>
+      </label>
+      <label>Тайлант сар
+        <input id="period" type="month" />
+      </label>
+      <label>Мэргэжилтэн
+        <input id="specialist" placeholder="Нэр" />
+      </label>
     </div>
   </header>
 
-  <main>
-    <div class="kpis" id="kpis"></div>
+  <div class="bar">
+    <button type="button" id="btnAdd" class="btn">+ Мөр нэмэх</button>
+    <button type="button" id="btnFromPrev" class="btn ghost">Өмнөх сарын түүхээс татах</button>
+    <button type="button" id="btnSave" class="btn">Хадгалах</button>
+    <button type="button" id="btnExcel" class="btn primary">Excel тайлан татах</button>
+    <span id="status" class="status"></span>
+  </div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="queue">Ажлын жагсаалт</button>
-      <button class="tab" data-tab="apply">Орлуулга</button>
-      <button class="tab" data-tab="index">Индекс</button>
-      <button class="tab" data-tab="items">Сагс</button>
-      <button class="tab" data-tab="audit">Баримт</button>
-      <button class="tab" data-tab="rules">Аргачлал</button>
-    </div>
+  <div class="layout">
+    <aside>
+      <h2>Сарын түүх</h2>
+      <p class="hint">Дараа сард эндээс өмнөх орлуулга харагдана.</p>
+      <div id="history"></div>
+    </aside>
 
-    <section class="panel active" id="panel-queue">
-      <div class="card">
-        <h2>Шийдвэр хүлээгдэж буй нэр төрөл</h2>
-        <p class="hint">Аргачлалын 10-р бүлэг: алгассан үнэ, хөлдүү үнэ, чанар/багц, хэмжих нэгж, хэт хазайлт. Мөр дээр дарж орлуулга руу орно.</p>
-        <div class="scroll">
-          <table class="data" id="tblQueue">
-            <thead>
-              <tr>
-                <th class="left">Салбар</th>
-                <th class="left">Нэр төрөл</th>
-                <th class="left">Асуудал</th>
-                <th class="left">Санал болгох арга</th>
-                <th>Өмнөх үнэ</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+    <main>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-wrap">
+        <table class="sheet" id="sheet">
+          <thead>
+            <tr>
+              <th class="col-n">№</th>
+              <th class="col-name">Бүтээгдэхүүн, үйлчилгээ</th>
+              <th class="col-ent">ААНБ</th>
+              <th class="col-unit">Нэгж</th>
+              <th class="col-num">Өмнөх үнэ</th>
+              <th class="col-method">Орлуулгын арга</th>
+              <th class="col-pct">Өөрчлөлт %</th>
+              <th class="col-num calc">Тайлант үнэ</th>
+              <th class="col-note">Тайлбар / тодруулга</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="left muted">Нийт мөр: <span id="rowCount">0</span></td>
+              <td id="sumPrev" class="num"></td>
+              <td></td>
+              <td></td>
+              <td id="sumNow" class="num calc"></td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
-    </section>
+      <p class="legend">
+        Шар нүд — томьёогоор гарсан үнэ (гараар засахгүй). Өөрчлөлт % = (тайлант / өмнөх − 1) × 100.
+        Өмнөх үеийн үнийг хадгалах үед хувь 0, үнэ өмнөхтэй тэнцүү.
+      </p>
+    </main>
+  </div>
 
-    <section class="panel" id="panel-apply">
-      <div class="grid-2">
-        <div class="card" id="caseCard">
-          <h2>Тохиолдол</h2>
-          <p class="hint" id="caseEmpty">Жагсаалтаас нэр төрөл сонгоно уу.</p>
-          <div id="caseBody" style="display:none"></div>
-        </div>
-        <div class="card">
-          <h2>Аргын дараалал</h2>
-          <p class="hint">1 → 6. Өмнөх үеийн үнийг хадгалах нь сүүлийн сонголт.</p>
-          <div id="options"></div>
-          <div id="applyBox" style="display:none">
-            <label class="hint">Тайлбар / ААНБ-тай тодруулга</label>
-            <textarea id="applyNote" placeholder="Жишээ: ААНБ мэдээ хоцорсон, ижил бүлгийн дунджаар орлуулав."></textarea>
-            <div class="actions">
-              <button class="btn btn-primary" id="btnApply">Орлуулга баталгаажуулах</button>
-              <button class="btn btn-ghost" id="btnSkip">Алгасах</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="panel-index">
-      <div class="card">
-        <h2>Салбар, бүлгийн индекс (өмнөх сар = 100)</h2>
-        <p class="hint">Элементар түвшинд Жевонс (геометрик дундаж), дээр Ласпейрес жингээр. Орлуулсан үнэ тооцоонд орно.</p>
-        <div class="scroll">
-          <table class="data" id="tblIndex">
-            <thead>
-              <tr>
-                <th class="left">Түвшин</th>
-                <th>Жин</th>
-                <th>Индекс</th>
-                <th>Өөрчлөлт %</th>
-                <th>Ажиглалт</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="panel-items">
-      <div class="card">
-        <h2>Сагсны үнэ</h2>
-        <div class="scroll">
-          <table class="data" id="tblItems">
-            <thead>
-              <tr>
-                <th class="left">Салбар</th>
-                <th class="left">Нэр</th>
-                <th class="left">Нэгж</th>
-                <th>Өмнөх</th>
-                <th>Тайлант</th>
-                <th>%</th>
-                <th class="left">Төлөв</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="panel-audit">
-      <div class="card">
-        <h2>Орлуулгын баримт</h2>
-        <p class="hint">Хугацаа, арга, коэффициент, эх үүсвэр — аргачлалын 10.6.</p>
-        <div class="scroll">
-          <table class="data" id="tblAudit">
-            <thead>
-              <tr>
-                <th class="left">Цаг</th>
-                <th class="left">Нэр төрөл</th>
-                <th class="left">Арга</th>
-                <th>Орлуулсан үнэ</th>
-                <th class="left">Мэргэжилтэн</th>
-                <th class="left">Тайлбар</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="panel-rules">
-      <div class="card">
-        <h2>Орлуулгын дараалал (аргачлал §10)</h2>
-        <ol class="rules">
-          <li>Харьцуулах боломжтой орлуулга — үнийг тодорхойлох шинж ижил бол шууд харьцуулна.</li>
-          <li>Давхцах үеийн арга — хуучин, шинэ нь нэг сард зэрэгцэн зарагдана.</li>
-          <li>Зорилтот дунджаар орлуулах — ижил бүлгийн үнийн өөрчлөлт (зөвлөмжит, алгассан үнэд).</li>
-          <li>Ерөнхий дунджаар орлуулах — салбарын үлдсэн ажиглалт.</li>
-          <li>Ил тод чанарын тохируулга — багц, металл агуулга, жин.</li>
-          <li>Өмнөх үеийн үнийг хадгалах — зөвхөн 1 сар, үндсэн арга биш.</li>
-        </ol>
-        <p class="hint">Шийдвэрийг програм санал болгоно. «Ижил чанартай юу» гэдгийг мэргэжилтэн батална. ААНБ-тай тодруулгыг тайлбарт бичнэ.</p>
-      </div>
-      <div class="card">
-        <h2>Салбарын онцлог</h2>
-        <ul class="rules">
-          <li><b>B уул уурхай</b> — тонн үнэ биш, зэс/алтны агуулгаар тогтмол чанар.</li>
-          <li><b>C боловсруулах</b> — сав, жин өөрчлөгдвөл нэгж үнэ.</li>
-          <li><b>D, E</b> — зохицуулалттай тариф; хөлдүү үнэ автоматаар алдаа биш.</li>
-          <li><b>H тээвэр</b> — чиглэл, зай, төгрөг/мянган төгрөг, валютын ханш.</li>
-          <li><b>I буудал, хоол</b> — сарын дундаж, 12 сар хөлдүү үнэ, доллароорх цэс.</li>
-          <li><b>J холбоо</b> — багц солигдохыг шууд харьцуулахгүй; цалингийн өсөлт гарцын үнэ бол цэвэр үнэ.</li>
-        </ul>
-      </div>
-    </section>
-  </main>
-  <footer>ҮСХ · ҮҮИ аргачлал 2026 · жишээ өгөгдөл · локал тооцоолол</footer>
-
-  <script src="engine.js"></script>
-  <script src="data.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
